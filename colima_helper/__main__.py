@@ -10,17 +10,20 @@ import daemon.pidfile
 
 from colima_helper.arguments import parse_main_args, ArgumentAction
 from colima_helper.fs_events.fs_events import forward_fsevents
+from colima_helper.gui import gui
 
 colored_traceback.add_hook(always=True)
 pp = pprint.PrettyPrinter(indent=4)
 
 FS_EVENT_PID_FILE = '/tmp/colima-helper-fs-events.pid'
 FS_EVENT_LOG_FILE = '/tmp/colima-helper-fs-events.log'
+GUI_LOG_FILE = '/tmp/colima-helper-gui.log'
 
 
 def init_logger(level, filename=None):
-    _format = '%(levelname)s - %(asctime)s - %(message)s'
+    _format = '%(name)s - %(levelname)s - %(asctime)s - %(message)s'
     _date_format = '%Y-%m-%d %H:%M:%S'
+    logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
     if filename is not None:
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
@@ -32,12 +35,12 @@ def init_logger(level, filename=None):
             datefmt=_date_format
         )
         return logging.root.handlers[0]
-    else:
-        logging.basicConfig(
-            level=level,
-            format=_format,
-            datefmt=_date_format
-        )
+    logging.basicConfig(
+        level=level,
+        format=_format,
+        datefmt=_date_format
+    )
+    return None
 
 
 def main() -> None:
@@ -72,6 +75,12 @@ def main() -> None:
             fs_event_pid = int(file_handler.read())
             os.unlink(FS_EVENT_PID_FILE)
         os.kill(fs_event_pid, signal.SIGKILL)
+        sys.exit(0)
+
+    if args.action == ArgumentAction.GUI:
+        init_logger(args.loglevel, GUI_LOG_FILE)
+        logging.info("Starting gui")
+        gui(args.docker_host, args.fsevents_address, args.fsevents_port)
         sys.exit(0)
 
     parser.print_help(sys.stderr)

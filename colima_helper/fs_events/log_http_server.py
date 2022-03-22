@@ -24,12 +24,15 @@ class _LogHTTPServer(ThreadingHTTPServer):
         def __init__(self, request, client_address, server):
             BaseHTTPRequestHandler.__init__(self, request, client_address, server)
 
+        # pylint: disable=arguments-differ
         def log_message(self, _, *args):
             return
 
+        # pylint: disable=invalid-name
         def do_GET(self):
             if self.path == '/logs':
-                return self.do_logs()
+                self.do_logs()
+                return
 
             self.send_response(404)
             self.end_headers()

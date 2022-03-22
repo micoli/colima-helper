@@ -1,9 +1,10 @@
 import logging
 from shlex import quote
+
 from expiringdict import ExpiringDict
-from watchdog.events import PatternMatchingEventHandler
-from paramiko.client import SSHClient
 from paramiko import AutoAddPolicy, ssh_exception
+from paramiko.client import SSHClient
+from watchdog.events import PatternMatchingEventHandler
 
 cache = ExpiringDict(max_len=100, max_age_seconds=6)
 logger = logging.getLogger('fs_event')

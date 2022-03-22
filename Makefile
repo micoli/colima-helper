@@ -10,3 +10,11 @@ test-e2e: clean init
 
 clean:
 	find . -name "__pycache__" | xargs rm -r
+
+dev-up:
+	docker-compose  -f $$PWD/test/docker-compose.yml up -d --build
+	docker-compose  -f $$PWD/test/docker-compose.yml ps
+
+dev-down:
+	docker-compose  -f $$PWD/test/docker-compose.yml down
+	docker-compose  -f $$PWD/test/docker-compose.yml ps

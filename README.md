@@ -64,11 +64,8 @@ pid: `/tmp/colima-helper-fs-events.pid`
 Merge requests are welcomed
 
 
+
 # TODO
-- sort event
-- fs event watcher
-- docker-compose support
 - plugin events messenger
-- stderr/stdout
-- docker.APIClient/context/from_env DI
-- local htop
+- pm2 subprocesses
+- local minimalist htop

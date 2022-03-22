@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pathlib
-from setuptools import setup,find_packages
+
+from setuptools import setup, find_packages
 
 README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
@@ -23,9 +24,19 @@ setup(
         "ansi",
         "colored_traceback",
         "daemon",
+        "dependency-injector",
+        "docker",
+        "event-bus",
         "expiringdict",
         "paramiko",
+        "parsedatetime",
         "python-daemon",
+        "pygments",
+        "pyyaml",
+        "requests",
+        "supervisor",
+        "urwid",
+        "urwidtrees",
         "watchdog"
     ],
     extras_require={

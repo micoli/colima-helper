@@ -1,4 +1,3 @@
-import time
 import logging
 from shlex import quote
 from expiringdict import ExpiringDict
@@ -29,7 +28,7 @@ class FileEventHandler(PatternMatchingEventHandler):
             return
         cache[event.src_path] = True
 
-        command = 'touch -c d %s %s' % (int(time.time()), quote(event.src_path))
+        command = 'touch -a -c %s' % quote(event.src_path)
 
         logging.info("Event forwarded %s" % event.src_path)
         if not self.ensure_connected():

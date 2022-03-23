@@ -28,6 +28,8 @@ def main() -> None:
     )
 
     if args.action == 'kill-fs-events':
+        if not os.path.exists(FS_EVENT_PID_FILE):
+            sys.exit(0)
         with open(FS_EVENT_PID_FILE, encoding='ASCII') as file_handler:
             fs_event_pid = int(file_handler.read())
             os.unlink(FS_EVENT_PID_FILE)

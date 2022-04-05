@@ -59,6 +59,16 @@ log: `/tmp/colima-helper-fs-events.log`
 pid: `/tmp/colima-helper-fs-events.pid`
 
 # Todo
-- migrate daemon mode to https://pypi.org/project/launchctl/
+- migrate daemon mode to https://pypi.org/project/launchctl/ for fs-event
 
 Merge requests are welcomed
+
+
+# TODO
+- sort event
+- fs event watcher
+- docker-compose support
+- plugin events messenger
+- stderr/stdout
+- docker.APIClient/context/from_env DI
+- local htop

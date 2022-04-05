@@ -1,6 +1,10 @@
 import argparse
 import logging
 
+class ArgumentAction:
+    FS_EVENTS = 'fs-events'
+    KILL_FS_EVENTS = 'kill-fs-events'
+
 
 def parse_main_args():
     parser = argparse.ArgumentParser(
@@ -52,6 +56,19 @@ def parse_main_args():
         action=argparse.BooleanOptionalAction,
         dest="daemon",
         default=False,
+    )
+    fs_events_parser.add_argument(
+        '--address',
+        help='http log address',
+        dest='address',
+        default='127.0.0.1',
+    )
+    fs_events_parser.add_argument(
+        '--port',
+        help='http log port',
+        type=int,
+        dest='port',
+        default=8087,
     )
     parser.add_argument(
         '--debug',

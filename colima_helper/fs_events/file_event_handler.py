@@ -6,6 +6,7 @@ from paramiko.client import SSHClient
 from paramiko import AutoAddPolicy, ssh_exception
 
 cache = ExpiringDict(max_len=100, max_age_seconds=6)
+logger = logging.getLogger('fs_event')
 
 
 class FileEventHandler(PatternMatchingEventHandler):
@@ -24,34 +25,34 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_any_event(self, event):
         if cache.get(event.src_path) is not None:
-            logging.debug("Event not forwarded because of cooldown %s" % event.src_path)
+            logger.debug("Event not forwarded because of cooldown %s" % event.src_path)
             return
         cache[event.src_path] = True
 
         command = 'touch -a -c %s' % quote(event.src_path)
 
-        logging.info("Event forwarded %s" % event.src_path)
+        logger.info("Event forwarded %s" % event.src_path)
         if not self.ensure_connected():
-            logging.error("Not connected to %s" % self.ssh_config['hostname'])
+            logger.error("Not connected to %s" % self.ssh_config['hostname'])
             return
         try:
             _, stdout, stderr = self.client.exec_command(command)
         except ssh_exception.SSHException as error:
-            logging.error("Event forwarded error %s" % error)
+            logger.error("Event forwarded error %s" % error)
             return
 
-        logging.debug("Event forwarded command %s" % command)
+        logger.debug("Event forwarded command %s" % command)
         out = ''
         for line in iter(stdout.readline, ""):
             out = out.join(line)
         if out != '':
-            logging.debug("Event forwarded result \n%s" % out)
+            logger.debug("Event forwarded result \n%s" % out)
 
         error = ''
         for line in iter(stderr.readline, ""):
             error = error.join(line)
         if error != '':
-            logging.debug("Event forwarded error \n%s" % error)
+            logger.debug("Event forwarded error \n%s" % error)
 
     def ensure_connected(self):
         if self.client is None or self.client.get_transport() is None or not self.client.get_transport().is_active():

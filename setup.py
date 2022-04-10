@@ -8,6 +8,7 @@ README = (pathlib.Path(__file__).parent / "README.md").read_text()
 setup(
     name="colima-helper",
     version="0.1.0",
+    python_requires='>3.9.0',
     description="colima local DX helper",
     long_description=README,
     long_description_content_type="text/markdown",

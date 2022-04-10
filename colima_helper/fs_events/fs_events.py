@@ -1,4 +1,5 @@
 import logging
+import shutil
 import time
 
 from paramiko import SSHConfig
@@ -12,7 +13,8 @@ logger = logging.getLogger('fs_event')
 
 
 def _get_ssh_config(colima_host):
-    config_text = process_exec(['/usr/local/bin/colima', 'ssh-config', colima_host])
+    colima_bin_path = shutil.which('colima')
+    config_text = process_exec([colima_bin_path, 'ssh-config', colima_host])
     configs = SSHConfig.from_text(config_text)
     return configs.lookup(colima_host)
 

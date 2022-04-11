@@ -4,6 +4,7 @@ import urwid
 import urwidtrees
 from dependency_injector.wiring import inject, Provide
 from event_bus import EventBus
+from urwidtrees import ArrowTree
 
 from colima_helper.gui.actions import SubprocessActions, ComposeServiceActions
 from colima_helper.gui.bus import set_listeners, listener
@@ -13,6 +14,53 @@ from colima_helper.gui.events import SubprocessContainerStoppedEvent, DockerComp
 from colima_helper.gui.helpers.colored_name import register_by_name
 from colima_helper.gui.services.docker_container.dataclass import DockerComposeProject
 from colima_helper.gui.shortcut import shortcuts
+
+
+class SimpleArrowTree(ArrowTree):
+    def decorate(self, pos, widget, is_first=True):
+        """
+        builds a list element for given position in the tree.
+        It consists of the original widget taken from the Tree and some
+        decoration columns depending on the existence of parent and sibling
+        positions. The result is a urwid.Columns widget.
+        """
+        if widget is None:
+            return None
+        if pos is None:
+            return None
+
+        original_widget = widget
+        cols = self._construct_spacer(pos, [])
+
+        # Construct arrow leading from parent here,
+        # if we have a parent and indentation is turned on
+        if self._indent > 0:
+            if is_first:
+                indent = self._construct_first_indent(pos)
+                if indent is not None:
+                    cols = cols + indent
+            else:
+                parent = self._tree.parent_position(pos)
+                if self._indent > 0 and parent is not None:
+                    parent_sib = self._tree.next_sibling_position(pos)
+                    draw_vbar = parent_sib is not None
+                    void = urwid.AttrMap(urwid.SolidFill(' '), self._arrow_att)
+                    if self._childbar_offset > 0:
+                        cols.append((self._childbar_offset, void))
+                    if draw_vbar:
+                        barw = urwid.SolidFill(self._arrow_vbar_char)
+                        _bar = urwid.AttrMap(barw, self._arrow_vbar_att or self._arrow_att)
+                        rspace_width = self._indent - 1 - self._childbar_offset
+                        cols.append((1, _bar))
+                        cols.append((rspace_width, void))
+                    else:
+                        cols.append((self._indent, void))
+
+        # add the original widget for this line
+        cols.append(original_widget)
+        # construct a Columns, defining all spacer as Box widgets
+        line = urwid.Columns(cols, box_columns=range(len(cols))[:-1])
+        return line
 
 
 class FocusableNode(urwid.WidgetWrap):
@@ -71,7 +119,7 @@ class ComposeProjectNode(urwid.WidgetWrap):
         )
 
     def selectable(self):
-        return True
+        return False
 
     @staticmethod
     def keypress(_, key):
@@ -218,7 +266,7 @@ class ServicesTreeView(urwid.WidgetWrap):
             (FocusableNode('Docker-Compose Services'), self.compose_project_nodes)
         ])
         self.tree_widget = urwidtrees.widgets.TreeBox(
-            urwidtrees.decoration.ArrowTree(self.tree),
+            SimpleArrowTree(self.tree),
             focus=None
         )
         urwid.WidgetWrap.__init__(self, urwid.AttrMap(self.tree_widget, 'bg'))

@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 from threading import RLock
 
@@ -71,7 +72,12 @@ class DockerComposeService:
         if 'com.docker.compose.project' not in labels:
             return
 
-        config_files = labels['com.docker.compose.project.config_files'].split(',')
+        config_files = self.resolve_full_config_filenames(
+            labels['com.docker.compose.project.working_dir'],
+            labels['com.docker.compose.project.config_files'].split(','),
+        )
+        if len(config_files) == 0:
+            return
         for config_file in config_files:
             self.read_docker_compose_config_file(config_file)
 
@@ -102,9 +108,33 @@ class DockerComposeService:
     def read_docker_compose_config_file(self, config_file):
         if config_file in self.docker_compose_services_in_config_file:
             return
-        with open(config_file, encoding='utf-8') as file_handler:
-            data = yaml.load(file_handler, Loader=SafeLoader)
-            if 'services' in data:
-                self.docker_compose_services_in_config_file[config_file] = [
-                    service_name for index, service_name in enumerate(data['services'])
-                ]
+        try:
+            with open(config_file, encoding='utf-8') as file_handler:
+                data = yaml.load(file_handler, Loader=SafeLoader)
+                if 'services' in data:
+                    self.docker_compose_services_in_config_file[config_file] = [
+                        service_name for index, service_name in enumerate(data['services'])
+                    ]
+        except FileNotFoundError:
+            logging.exception('Config file not found %s ' % config_file)
+
+    def resolve_full_config_filenames(self, working_dir: str, config_files: list[str]) -> list[str]:
+        return list(filter(
+            lambda filename: filename is not None,
+            map(
+                lambda filename: self.resolve_full_config_filename(working_dir, filename),
+                config_files
+            )
+        ))
+
+    @staticmethod
+    def resolve_full_config_filename(working_dir: str, config_file: str):
+
+        if os.path.exists(config_file):
+            return config_file
+
+        if os.path.exists('%s/%s' % (working_dir, config_file)):
+            return '%s/%s' % (working_dir, config_file)
+
+        logging.error('Can not resolve docker-compose filename %s in %s' % (config_file, working_dir))
+        return None

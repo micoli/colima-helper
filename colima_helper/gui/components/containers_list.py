@@ -1,3 +1,4 @@
+import logging
 import re
 
 import urwid
@@ -312,8 +313,10 @@ class ContainersListView(urwid.WidgetWrap):
                 if container.container_name == previous_focused_item_name:
                     self.walker.set_focus(index)
                     return
-
-        self.walker.set_focus(0 if len(self.containers) == 0 else 1)
+        try:
+            self.walker.set_focus(0 if len(self.containers) == 0 else 1)
+        except IndexError:
+            logging.exception('Focus error %d' % len(self.containers))
 
     def get_filtered_containers(self):
         containers = sorted(

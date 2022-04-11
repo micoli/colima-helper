@@ -1,7 +1,6 @@
 import logging
 import sys
 import threading
-import traceback
 
 import colima_helper
 from colima_helper.gui.app import App

@@ -26,7 +26,8 @@ def forward_fsevents(
         ignore_patterns: list[str],
         replace_patterns: list[str],
         server_address: str,
-        server_port: int
+        server_port: int,
+        cooldown_timeout: int
 ):
     http_log_handler = HttpLogHandler(server_address, server_port, 10)
     logging.getLogger().addHandler(http_log_handler)
@@ -36,7 +37,8 @@ def forward_fsevents(
         _get_ssh_config(colima_host),
         patterns,
         ignore_patterns,
-        replace_patterns
+        replace_patterns,
+        cooldown_timeout
     )
     observer.schedule(event_handler, path, recursive=True)
     observer.start()

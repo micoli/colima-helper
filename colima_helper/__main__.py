@@ -53,7 +53,8 @@ def main() -> None:
                 args.ignore_patterns,
                 args.replace_patterns,
                 args.address,
-                args.port
+                args.port,
+                args.cooldown_timeout
             )
 
         if args.daemon:

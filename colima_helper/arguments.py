@@ -57,6 +57,13 @@ def parse_main_args():
         nargs='+',
         default=[]
     )
+    fs_events_parser.add_argument(
+        '--cooldown-timeout',
+        action='store',
+        help='cooldown timeout',
+        type=int,
+        default=3
+    )
     parser.add_argument(
         '--daemon',
         help="daemonize",

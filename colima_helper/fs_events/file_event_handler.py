@@ -10,9 +10,7 @@ from paramiko import AutoAddPolicy, ssh_exception
 from paramiko.client import SSHClient
 from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
 
-cache = ExpiringDict(max_len=2000, max_age_seconds=5)
 logger = logging.getLogger('fs_event')
-
 
 def split_replacement(argument: str):
     parts = argument.split(':', 2)
@@ -20,7 +18,7 @@ def split_replacement(argument: str):
 
 
 class FileEventHandler(PatternMatchingEventHandler):
-    def __init__(self, ssh_config, patterns, ignore_patterns, replace_patterns):
+    def __init__(self, ssh_config, patterns, ignore_patterns, replace_patterns, cooldown_timeout):
         PatternMatchingEventHandler.__init__(
             self,
             patterns=patterns,
@@ -30,6 +28,7 @@ class FileEventHandler(PatternMatchingEventHandler):
         )
         self.ssh_config = ssh_config
         self.client = SSHClient()
+        self.cache = ExpiringDict(max_len=2000, max_age_seconds=cooldown_timeout)
         self.replace_patterns = list(map(split_replacement, replace_patterns))
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.ssh_connect()
@@ -37,7 +36,7 @@ class FileEventHandler(PatternMatchingEventHandler):
 
     def on_any_event(self, event: FileModifiedEvent):
         mtime = datetime.datetime.fromtimestamp(os.path.getmtime(event.src_path))
-        if cache.get(event.src_path) is not None:
+        if self.cache.get(event.src_path) is not None:
             logger.info(
                 "Event not forwarded because of cooldown %s %s" % (
                     event.src_path,
@@ -45,7 +44,7 @@ class FileEventHandler(PatternMatchingEventHandler):
                 )
             )
             return
-        cache[event.src_path] = True
+        self.cache[event.src_path] = True
         src_path = event.src_path
         for [pattern, replacement] in self.replace_patterns:
             src_path = re.sub(pattern, replacement, src_path)

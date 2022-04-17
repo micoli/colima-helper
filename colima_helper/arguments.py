@@ -21,7 +21,7 @@ def parse_main_args():
         'fs-events',
         help='wath for filesystem changes and "touch" on colima host'
     )
-    subparsers.add_parser(
+    kill_fs_events_parser = subparsers.add_parser(
         'kill-fs-events',
         help='kill fs-event daemon'
     )
@@ -83,6 +83,13 @@ def parse_main_args():
         type=int,
         dest='port',
         default=8087,
+    )
+    kill_fs_events_parser.add_argument(
+        '--path',
+        action='store',
+        help='watched path',
+        type=str,
+        default=None
     )
     parser.add_argument(
         '--debug',

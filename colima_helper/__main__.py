@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import pprint
@@ -14,8 +15,8 @@ from colima_helper.fs_events.fs_events import forward_fsevents
 colored_traceback.add_hook(always=True)
 pp = pprint.PrettyPrinter(indent=4)
 
-FS_EVENT_PID_FILE = '/tmp/colima-helper-fs-events.pid'
-FS_EVENT_LOG_FILE = '/tmp/colima-helper-fs-events.log'
+FS_EVENT_PID_FILE_MASK = '/tmp/colima-helper-fs-events-%s.pid'
+FS_EVENT_LOG_FILE_MASK = '/tmp/colima-helper-fs-events-%s.log'
 
 
 def init_logger(level, filename=None):
@@ -32,12 +33,12 @@ def init_logger(level, filename=None):
             datefmt=_date_format
         )
         return logging.root.handlers[0]
-    else:
-        logging.basicConfig(
-            level=level,
-            format=_format,
-            datefmt=_date_format
-        )
+    logging.basicConfig(
+        level=level,
+        format=_format,
+        datefmt=_date_format
+    )
+    return None
 
 
 def main() -> None:
@@ -58,13 +59,14 @@ def main() -> None:
             )
 
         if args.daemon:
-            handler = init_logger(args.loglevel, FS_EVENT_LOG_FILE)
+            project_name = os.path.basename(args.path)
+            handler = init_logger(args.loglevel, FS_EVENT_LOG_FILE_MASK % project_name)
             daemon_context = daemon.DaemonContext(
                 stdout=handler.stream,
                 stderr=handler.stream,
                 working_directory=args.path,
                 umask=0o002,
-                pidfile=daemon.pidfile.PIDLockFile(FS_EVENT_PID_FILE)
+                pidfile=daemon.pidfile.PIDLockFile(FS_EVENT_PID_FILE_MASK % project_name)
             )
             with daemon_context:
                 start_forward_fsevents()
@@ -75,12 +77,13 @@ def main() -> None:
             sys.exit(0)
 
     if args.action == ArgumentAction.KILL_FS_EVENTS:
-        if not os.path.exists(FS_EVENT_PID_FILE):
-            sys.exit(0)
-        with open(FS_EVENT_PID_FILE, encoding='ASCII') as file_handler:
-            fs_event_pid = int(file_handler.read())
-            os.unlink(FS_EVENT_PID_FILE)
-        os.kill(fs_event_pid, signal.SIGKILL)
+        project_name = os.path.basename(args.path) if args.path is not None else '*'
+        files = glob.glob(FS_EVENT_PID_FILE_MASK % project_name)
+        for file in files:
+            with open(file, encoding='ASCII') as file_handler:
+                fs_event_pid = int(file_handler.read())
+                os.unlink(file)
+            os.kill(fs_event_pid, signal.SIGKILL)
         sys.exit(0)
 
     parser.print_help(sys.stderr)

@@ -57,8 +57,12 @@ colima-helper kill-fs-events --path=~/src/project/
 
 #### Files location
 
-log: `/tmp/colima-helper-fs-events.log`
-pid: `/tmp/colima-helper-fs-events.pid`
+log: `/tmp/colima-helper-fs-events-projectname.log`
+pid: `/tmp/colima-helper-fs-events-projectname.pid`
+
+to kill previous version pid file instance:
+
+`ls /tmp/colima-helper-fs-events.pid && kill -9 &grave;cat /tmp/colima-helper-fs-events.pid &grave; && rm /tmp/colima-helper-fs-events.pid; rm /tmp/colima-helper-fs-events.log`
 
 # Todo
 - migrate daemon mode to https://pypi.org/project/launchctl/ for fs-event

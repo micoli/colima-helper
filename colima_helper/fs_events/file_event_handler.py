@@ -1,6 +1,8 @@
+import datetime
 import logging
 import os
-import datetime
+import pprint
+import re
 from shlex import quote
 
 from expiringdict import ExpiringDict
@@ -12,8 +14,13 @@ cache = ExpiringDict(max_len=2000, max_age_seconds=5)
 logger = logging.getLogger('fs_event')
 
 
+def split_replacement(argument: str):
+    parts = argument.split(':', 2)
+    return re.compile(parts[0]), parts[1]
+
+
 class FileEventHandler(PatternMatchingEventHandler):
-    def __init__(self, ssh_config, patterns, ignore_patterns):
+    def __init__(self, ssh_config, patterns, ignore_patterns, replace_patterns):
         PatternMatchingEventHandler.__init__(
             self,
             patterns=patterns,
@@ -23,6 +30,7 @@ class FileEventHandler(PatternMatchingEventHandler):
         )
         self.ssh_config = ssh_config
         self.client = SSHClient()
+        self.replace_patterns = list(map(split_replacement, replace_patterns))
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.ssh_connect()
         self.client.exec_command('apk info coreutils -e || sudo apk add coreutils')
@@ -38,8 +46,12 @@ class FileEventHandler(PatternMatchingEventHandler):
             )
             return
         cache[event.src_path] = True
+        src_path = event.src_path
+        for [pattern, replacement] in self.replace_patterns:
+            src_path = re.sub(pattern, replacement, src_path)
+            logger.debug("PATTERNS %s:%s %s" % (pattern, replacement, src_path))
 
-        command = 'touch -c --time=modify -d "%s" %s' % (mtime.isoformat(' ', 'microseconds'), quote(event.src_path))
+        command = 'touch -c --time=modify -d "%s" %s' % (mtime.isoformat(' ', 'microseconds'), quote(src_path))
 
         logger.info("Event forwarded %s" % command)
         if not self.ensure_connected():

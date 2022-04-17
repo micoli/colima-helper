@@ -50,6 +50,13 @@ def parse_main_args():
         nargs='+',
         default=["*.git"]
     )
+    fs_events_parser.add_argument(
+        '--replace-patterns',
+        action='store',
+        help='replace pattern',
+        nargs='+',
+        default=[]
+    )
     parser.add_argument(
         '--daemon',
         help="daemonize",

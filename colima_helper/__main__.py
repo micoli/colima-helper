@@ -46,7 +46,15 @@ def main() -> None:
 
     if args.action == ArgumentAction.FS_EVENTS:
         def start_forward_fsevents():
-            forward_fsevents(args.path, args.host, args.patterns, args.ignore_patterns, args.address, args.port)
+            forward_fsevents(
+                args.path,
+                args.host,
+                args.patterns,
+                args.ignore_patterns,
+                args.replace_patterns,
+                args.address,
+                args.port
+            )
 
         if args.daemon:
             handler = init_logger(args.loglevel, FS_EVENT_LOG_FILE)

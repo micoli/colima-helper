@@ -24,6 +24,7 @@ def forward_fsevents(
         colima_host: str,
         patterns: list[str],
         ignore_patterns: list[str],
+        replace_patterns: list[str],
         server_address: str,
         server_port: int
 ):
@@ -34,13 +35,16 @@ def forward_fsevents(
     event_handler = FileEventHandler(
         _get_ssh_config(colima_host),
         patterns,
-        ignore_patterns
+        ignore_patterns,
+        replace_patterns
     )
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
+
     logger.warning(
-        "FS event forwarder started, path '%s', host: '%s', patterns:%s, ignored:%s, address:%s, port: %s" %
-        (path, colima_host, patterns, ignore_patterns, server_address, server_port)
+        # pylint: disable=line-too-long
+        "FS event forwarder started, path '%s', host: '%s', patterns:%s, ignored:%s, replacements:%s, address:%s, port: %s" %
+        (path, colima_host, patterns, ignore_patterns, replace_patterns, server_address, server_port)
     )
 
     try:

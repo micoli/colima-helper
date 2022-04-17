@@ -17,12 +17,13 @@ pip install --upgrade --force-reinstall git+https://github.com/micoli/colima-hel
 
 depending of your installation `pip` can be replaced by `pip3`
 
-## Example of executions:
+## Commands
 
-### help
+### Help
+[//]: <> (command-placeholder-start "colima-helper --help")
 ```
-$ colima-helper --help
-usage: colima-helper [-h] [--daemon | --no-daemon] [--debug] [--verbose] {fs-events,kill-fs-events} ...
+usage: colima-helper [-h] [--daemon | --no-daemon] [--debug] [--verbose]
+                     {fs-events,kill-fs-events} ...
 
 Colima host helper
 
@@ -39,6 +40,45 @@ optional arguments:
   --debug               Print lots of debugging statements
   --verbose             Be verbose
 ```
+[//]: <> (command-placeholder-end)
+
+### Command `fs-event`
+[//]: <> (command-placeholder-start "colima-helper fs-events --help")
+```
+usage: colima-helper fs-events [-h] [--path PATH] [--host HOST]
+                               [--patterns PATTERNS [PATTERNS ...]]
+                               [--ignore-patterns IGNORE_PATTERNS [IGNORE_PATTERNS ...]]
+                               [--replace-patterns REPLACE_PATTERNS [REPLACE_PATTERNS ...]]
+                               [--cooldown-timeout COOLDOWN_TIMEOUT]
+                               [--address ADDRESS] [--port PORT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --path PATH           path to watch
+  --host HOST           colima host
+  --patterns PATTERNS [PATTERNS ...]
+                        pattern
+  --ignore-patterns IGNORE_PATTERNS [IGNORE_PATTERNS ...]
+                        ignore pattern
+  --replace-patterns REPLACE_PATTERNS [REPLACE_PATTERNS ...]
+                        replace pattern
+  --cooldown-timeout COOLDOWN_TIMEOUT
+                        cooldown timeout
+  --address ADDRESS     http log address
+  --port PORT           http log port
+```
+[//]: <> (command-placeholder-end)
+
+### Command `kill-fs-events`
+[//]: <> (command-placeholder-start "colima-helper kill-fs-events --help")
+```
+usage: colima-helper kill-fs-events [-h] [--path PATH]
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --path PATH  watched path
+```
+[//]: <> (command-placeholder-end)
 
 ### fs-events
 
@@ -51,7 +91,7 @@ colima-helper fs-events --path=~/src/project/ --host=colima
 
 #### Daemonized
 ```
-colima-helper --daemon --verbose fs-events --path=~/src/project/
+colima-helper --verbose fs-events --path=~/src/project/ --daemon
 colima-helper kill-fs-events --path=~/src/project/
 ```
 
@@ -69,12 +109,3 @@ to kill previous version pid file instance:
 
 Merge requests are welcomed
 
-
-# TODO
-- sort event
-- fs event watcher
-- docker-compose support
-- plugin events messenger
-- stderr/stdout
-- docker.APIClient/context/from_env DI
-- local htop

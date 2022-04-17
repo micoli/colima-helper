@@ -42,6 +42,8 @@ optional arguments:
 
 ### fs-events
 
+fsevent needs `coreutils` (`sudo apk add coreutils`) to use microsecond touch command
+
 #### Interactive
 ```
 colima-helper fs-events --path=~/src/project/ --host=colima

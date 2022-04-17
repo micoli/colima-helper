@@ -1,11 +1,14 @@
 import logging
+import os
+import datetime
 from shlex import quote
-from expiringdict import ExpiringDict
-from watchdog.events import PatternMatchingEventHandler
-from paramiko.client import SSHClient
-from paramiko import AutoAddPolicy, ssh_exception
 
-cache = ExpiringDict(max_len=100, max_age_seconds=6)
+from expiringdict import ExpiringDict
+from paramiko import AutoAddPolicy, ssh_exception
+from paramiko.client import SSHClient
+from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
+
+cache = ExpiringDict(max_len=2000, max_age_seconds=5)
 logger = logging.getLogger('fs_event')
 
 
@@ -22,16 +25,23 @@ class FileEventHandler(PatternMatchingEventHandler):
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.ssh_connect()
+        self.client.exec_command('apk info coreutils -e || sudo apk add coreutils')
 
-    def on_any_event(self, event):
+    def on_any_event(self, event: FileModifiedEvent):
+        mtime = datetime.datetime.fromtimestamp(os.path.getmtime(event.src_path))
         if cache.get(event.src_path) is not None:
-            logger.debug("Event not forwarded because of cooldown %s" % event.src_path)
+            logger.info(
+                "Event not forwarded because of cooldown %s %s" % (
+                    event.src_path,
+                    mtime.isoformat(' ', 'microseconds')
+                )
+            )
             return
         cache[event.src_path] = True
 
-        command = 'touch -a -c %s' % quote(event.src_path)
+        command = 'touch -c --time=modify -d "%s" %s' % (mtime.isoformat(' ', 'microseconds'), quote(event.src_path))
 
-        logger.info("Event forwarded %s" % event.src_path)
+        logger.info("Event forwarded %s" % command)
         if not self.ensure_connected():
             logger.error("Not connected to %s" % self.ssh_config['hostname'])
             return
@@ -41,7 +51,6 @@ class FileEventHandler(PatternMatchingEventHandler):
             logger.error("Event forwarded error %s" % error)
             return
 
-        logger.debug("Event forwarded command %s" % command)
         out = ''
         for line in iter(stdout.readline, ""):
             out = out.join(line)

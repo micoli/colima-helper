@@ -45,8 +45,8 @@ def forward_fsevents(
 
     logger.warning(
         # pylint: disable=line-too-long
-        "FS event forwarder started, path '%s', host: '%s', patterns:%s, ignored:%s, replacements:%s, address:%s, port: %s" %
-        (path, colima_host, patterns, ignore_patterns, replace_patterns, server_address, server_port)
+        "FS event forwarder started, path '%s', host: '%s', patterns:%s, ignored:%s, replacements:%s, address:%s, port: %s, cooldown_timeout: %s" %
+        (path, colima_host, patterns, ignore_patterns, replace_patterns, server_address, server_port, cooldown_timeout)
     )
 
     try:

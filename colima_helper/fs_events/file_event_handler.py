@@ -1,7 +1,6 @@
 import datetime
 import logging
 import os
-import pprint
 import re
 from shlex import quote
 
@@ -11,6 +10,7 @@ from paramiko.client import SSHClient
 from watchdog.events import PatternMatchingEventHandler, FileModifiedEvent
 
 logger = logging.getLogger('fs_event')
+
 
 def split_replacement(argument: str):
     parts = argument.split(':', 2)

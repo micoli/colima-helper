@@ -1,6 +1,8 @@
 import argparse
 import logging
 
+
+# pylint: disable=too-few-public-methods
 class ArgumentAction:
     FS_EVENTS = 'fs-events'
     KILL_FS_EVENTS = 'kill-fs-events'

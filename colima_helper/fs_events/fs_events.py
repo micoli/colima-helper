@@ -1,34 +1,61 @@
-import time
 import logging
-from watchdog.observers import Observer
+import shutil
+import time
+
 from paramiko import SSHConfig
+from watchdog.observers import Observer
 
-from colima_helper.fs_events.file_event_handler import FileEventHandler
 from colima_helper.process import process_exec
+from .file_event_handler import FileEventHandler
+from .log_http_server import HttpLogHandler
+
+logger = logging.getLogger('fs_event')
 
 
-def get_ssh_config(colima_host):
-    config_text = process_exec(['/usr/local/bin/colima', 'ssh-config', colima_host])
+def _get_ssh_config(colima_host):
+    colima_bin_path = shutil.which('colima')
+    config_text = process_exec([colima_bin_path, 'ssh-config', colima_host])
     configs = SSHConfig.from_text(config_text)
     return configs.lookup(colima_host)
 
 
-def forward_fsevents(path, colima_host, patterns, ignore_patterns):
+def forward_fsevents(
+        path: str,
+        colima_host: str,
+        patterns: list[str],
+        ignore_patterns: list[str],
+        replace_patterns: list[str],
+        server_address: str,
+        server_port: int,
+        cooldown_timeout: int
+):
+    http_log_handler = HttpLogHandler(server_address, server_port, 10)
+    logging.getLogger().addHandler(http_log_handler)
+
     observer = Observer()
     event_handler = FileEventHandler(
-        get_ssh_config(colima_host),
+        _get_ssh_config(colima_host),
         patterns,
-        ignore_patterns
+        ignore_patterns,
+        replace_patterns,
+        cooldown_timeout
     )
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
-    logging.warning("FS event forwarder started, path '%s', host: '%s'" % (path, colima_host))
+
+    logger.warning(
+        # pylint: disable=line-too-long
+        "FS event forwarder started, path '%s', host: '%s', patterns:%s, ignored:%s, replacements:%s, address:%s, port: %s, cooldown_timeout: %s" %
+        (path, colima_host, patterns, ignore_patterns, replace_patterns, server_address, server_port, cooldown_timeout)
+    )
+
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         pass
     finally:
-        logging.warning("FS event forwarder stopped")
+        logger.warning("FS event forwarder stopped")
+        http_log_handler.stop()
         observer.stop()
         observer.join()

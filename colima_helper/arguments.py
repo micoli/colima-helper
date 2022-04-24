@@ -2,6 +2,12 @@ import argparse
 import logging
 
 
+# pylint: disable=too-few-public-methods
+class ArgumentAction:
+    FS_EVENTS = 'fs-events'
+    KILL_FS_EVENTS = 'kill-fs-events'
+
+
 def parse_main_args():
     parser = argparse.ArgumentParser(
         description='Colima host helper',
@@ -17,7 +23,7 @@ def parse_main_args():
         'fs-events',
         help='wath for filesystem changes and "touch" on colima host'
     )
-    subparsers.add_parser(
+    kill_fs_events_parser = subparsers.add_parser(
         'kill-fs-events',
         help='kill fs-event daemon'
     )
@@ -46,12 +52,46 @@ def parse_main_args():
         nargs='+',
         default=["*.git"]
     )
+    fs_events_parser.add_argument(
+        '--replace-patterns',
+        action='store',
+        help='replace pattern',
+        nargs='+',
+        default=[]
+    )
+    fs_events_parser.add_argument(
+        '--cooldown-timeout',
+        action='store',
+        help='cooldown timeout',
+        type=int,
+        default=3
+    )
     parser.add_argument(
         '--daemon',
         help="daemonize",
         action=argparse.BooleanOptionalAction,
         dest="daemon",
         default=False,
+    )
+    fs_events_parser.add_argument(
+        '--address',
+        help='http log address',
+        dest='address',
+        default='127.0.0.1',
+    )
+    fs_events_parser.add_argument(
+        '--port',
+        help='http log port',
+        type=int,
+        dest='port',
+        default=8087,
+    )
+    kill_fs_events_parser.add_argument(
+        '--path',
+        action='store',
+        help='watched path',
+        type=str,
+        default=None
     )
     parser.add_argument(
         '--debug',
